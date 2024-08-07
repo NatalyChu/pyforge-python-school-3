@@ -10,7 +10,11 @@ def substructure_search(mols: list, mol: str) -> list:
     """takes two arguments: 1) List of molecules as SMILES strings 2) Substructure as SMILES string
     Function returns a list of all molecules from argument 1 that contain substructure from argument 2
     """
-
+    
+    # Handle invalid inputs
+    if not mol:
+        raise ValueError("Substructure SMILES string is empty or None.")
+    
     # Create a molecules from strings
     smile_mol = Chem.MolFromSmiles(mol)
     molecules = [Chem.MolFromSmiles(smiles) for smiles in mols]

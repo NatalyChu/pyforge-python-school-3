@@ -92,8 +92,8 @@ def delete_molecule(mol_id: int):
 def find_substructure(sub_str: str):
     """
     Substructure search for all added molecules
-    - **sub_str** - a SMILE string to search within all molecules
-    '''
+    - sub_str - a SMILE string to search within all molecules
+    """
     names = [molecule["name"] for molecule in molecules]
     try:
         substructure_search(names, sub_str)

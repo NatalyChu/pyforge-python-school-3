@@ -1,6 +1,6 @@
 import pytest
 from rdkit import Chem
-from src.sub_search import substructure_search
+from app.sub_search import substructure_search
 
 
 # A set of molecules to be used in tests

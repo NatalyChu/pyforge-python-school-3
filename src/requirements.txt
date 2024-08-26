@@ -1,5 +1,0 @@
-fastapi
-uvicorn
-rdkit
-pytest
-flake8

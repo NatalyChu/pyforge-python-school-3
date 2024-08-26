@@ -9,6 +9,20 @@ def visualize(molecules: list) -> None:
     )
     img.show()
 
+def substructure_search_db(sub_str: str, molecules):
+        # Make SMILES str into molecules in RDKit
+        substructure = Chem.MolFromSmiles(sub_str)
+        if substructure is None:
+            raise ValueError("Invalid substructure SMILES")
+        
+        # Sub structure search
+        matching_molecules = []
+        for molecule in molecules:
+            mol = Chem.MolFromSmiles(molecule.name)
+            if mol and mol.HasSubstructMatch(substructure):
+                matching_molecules.append(molecule)
+
+        return matching_molecules
 
 def substructure_search(mols: list, mol: str) -> list:
     """takes two arguments: 1) List of molecules as SMILES strings 2) Substructure as SMILES string

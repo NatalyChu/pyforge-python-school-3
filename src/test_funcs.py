@@ -1,5 +1,5 @@
 import pytest
-from src.functions import *
+from functions import *
 
 
 def test_reverse_string():

@@ -6,4 +6,5 @@ flake8
 sqlalchemy
 psycopg2-binary
 pydantic
+celery[redis]
 redis

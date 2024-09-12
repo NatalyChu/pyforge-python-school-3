@@ -5,10 +5,11 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app import models, schemas
 from app.database import engine, get_db
-from app.sub_search import substructure_search_db
 from typing import Iterator
 import redis
 import json
+from tasks import substructure_search_task
+from celery.result import AsyncResult
 
 # Create tables in DB
 models.Base.metadata.create_all(bind=engine)
@@ -121,50 +122,27 @@ def update_molecule(mol_id: int, molecule: schemas.MoleculeCreate, db: Session =
     return db_molecule
 
 # Substructure search for all added molecules
-@app.post(
-    "/molecules/sub_search",
-    tags=["molecules"],
-    response_description="List of all matching molecules",
-    response_model=list[schemas.Molecule]
-)
-async def find_substructure(sub_str: str, db: Session = Depends(get_db)):
+@app.post("/molecules/sub_search", tags=["molecules"])
+async def start_substructure_search(sub_str: str):
     """
-    Substructure search for all added molecules
-    - sub_str - a SMILE string to search within all molecules
+    Starts subsearch task in Celery.
     """
-    cache_key = f"search:{sub_str}"
-    cached_result = get_cached_result(cache_key)
+    task = substructure_search_task.delay(sub_str)
+    logger.info(f"Started substructure search task with task_id: {task.id}")
+    return {"task_id": task.id}
+
+@app.get("/molecules/sub_search/status/{task_id}", tags=["molecules"])
+async def get_task_status(task_id: str):
+    """
+    Gets task status by ID
+    """
+    task_result = AsyncResult(task_id)
     
-    if cached_result:
-        logger.info(f"Using cached result for substructure search with sub_str: {sub_str}")
-        matching_molecules = substructure_search_db(sub_str, cached_result)
-        logger.info(f"Found {len(matching_molecules)} matching molecules (cached)")
-        return matching_molecules
+    if task_result.state == 'PENDING':
+        return {"task_id": task_id, "status": "Pending"}
+    elif task_result.state == 'SUCCESS':
+        return {"task_id": task_id, "status": "Success", "result": task_result.result}
+    elif task_result.state == 'FAILURE':
+        return {"task_id": task_id, "status": "Failure", "result": str(task_result.result)}
     
-    logger.info(f"Starting substructure search with sub_str: {sub_str}")
-    try:
-        # Get molecules from the DB
-        molecules = db.query(models.Molecule).all()
-
-        # Convert SQLAlchemy objects to Pydantic models for serialization
-        molecules_data = []
-        for mol in molecules:
-            # Manually extract attributes and pass them to model_validate
-            molecule_data = schemas.Molecule.model_validate({
-                "mol_id": mol.mol_id,
-                "name": mol.name
-            }).model_dump()
-            molecules_data.append(molecule_data)
-
-        # Cache the result with expiration time
-        set_cache(cache_key, molecules_data, expiration=CACHE_EXPIRATION_TIME)
-
-        # Perform substructure search
-        matching_molecules = substructure_search_db(sub_str, molecules_data)
-
-        logger.info(f"Found {len(matching_molecules)} matching molecules")
-        return matching_molecules
-
-    except Exception as e:
-        logger.error(f"Error during substructure search: {str(e)}")
-        raise HTTPException(status_code=422, detail="Provided string cannot be converted into molecule")
+    return {"task_id": task_id, "status": task_result.state}

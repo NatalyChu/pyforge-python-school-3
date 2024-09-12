@@ -21,6 +21,14 @@ services:
       - db
       - redis
 
+  celery_app:
+    build: .
+    command: celery -A app.celery_app worker --loglevel=info
+    depends_on:
+      - redis
+    volumes:
+      - .:/app
+      
   redis:
     image: "redis:alpine"
     ports:

@@ -1,6 +1,7 @@
 from fastapi import FastAPI, status
 from fastapi.exceptions import HTTPException
 from rdkit import Chem
+from sub_search import substructure_search
 # from models import User
 
 
@@ -70,14 +71,9 @@ def find_substructure(sub_str: str):
     Substructure search for all added molecules
     - **sub_str** - a SMILE string to search within all molecules
     '''
-    match_list = []
+    names = [molecule["name"] for molecule in molecules]
     try:
-        sub_mol = Chem.MolFromSmiles(sub_str)
-        for id, mol in enumerate(molecules):
-            smile_mol = Chem.MolFromSmiles(mol["name"])
-            if smile_mol.HasSubstructMatch(sub_mol):
-                match_list.append(mol["name"])
-        return match_list
+        substructure_search(names, sub_str)
     except: 
         raise HTTPException(status_code=422, detail="Provided string cannot be converted into molecule")
     

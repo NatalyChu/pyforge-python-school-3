@@ -1,18 +1,34 @@
 import logging
 from fastapi import FastAPI, status
 from fastapi.exceptions import HTTPException
-from rdkit import Chem
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app import models, schemas
 from app.database import engine, get_db
 from app.sub_search import substructure_search_db
 from typing import Iterator
+import redis
+import json
 
 # Create tables in DB
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+# Connect to Redis
+redis_client = redis.Redis(host='redis', port=6379, db=0)
+
+# Cache expiration time in seconds
+CACHE_EXPIRATION_TIME = 3600
+
+def get_cached_result(key: str):
+    result = redis_client.get(key)
+    if result:
+        return json.loads(result)
+    return None
+
+def set_cache(key: str, value: dict, expiration: int = 60):
+    redis_client.setex(key, expiration, json.dumps(value))
 
 # Set up logger
 logging.basicConfig(level=logging.INFO)
@@ -111,21 +127,43 @@ def update_molecule(mol_id: int, molecule: schemas.MoleculeCreate, db: Session =
     response_description="List of all matching molecules",
     response_model=list[schemas.Molecule]
 )
-def find_substructure(sub_str: str, db: Session = Depends(get_db)):
+async def find_substructure(sub_str: str, db: Session = Depends(get_db)):
     """
     Substructure search for all added molecules
     - sub_str - a SMILE string to search within all molecules
     """
+    cache_key = f"search:{sub_str}"
+    cached_result = get_cached_result(cache_key)
+    
+    if cached_result:
+        logger.info(f"Using cached result for substructure search with sub_str: {sub_str}")
+        matching_molecules = substructure_search_db(sub_str, cached_result)
+        logger.info(f"Found {len(matching_molecules)} matching molecules (cached)")
+        return matching_molecules
+    
     logger.info(f"Starting substructure search with sub_str: {sub_str}")
     try:
-       # Get molecules from the DB
-       molecules = db.query(models.Molecule).all()
-       logger.info(f"Retrieved {len(molecules)} molecules from the database")
+        # Get molecules from the DB
+        molecules = db.query(models.Molecule).all()
 
-       matching_molecules = substructure_search_db(sub_str, molecules)
-       logger.info(f"Found {len(matching_molecules)} matching molecules for sub_str: {sub_str}")
+        # Convert SQLAlchemy objects to Pydantic models for serialization
+        molecules_data = []
+        for mol in molecules:
+            # Manually extract attributes and pass them to model_validate
+            molecule_data = schemas.Molecule.model_validate({
+                "mol_id": mol.mol_id,
+                "name": mol.name
+            }).model_dump()
+            molecules_data.append(molecule_data)
 
-       return matching_molecules
+        # Cache the result with expiration time
+        set_cache(cache_key, molecules_data, expiration=CACHE_EXPIRATION_TIME)
+
+        # Perform substructure search
+        matching_molecules = substructure_search_db(sub_str, molecules_data)
+
+        logger.info(f"Found {len(matching_molecules)} matching molecules")
+        return matching_molecules
 
     except Exception as e:
         logger.error(f"Error during substructure search: {str(e)}")

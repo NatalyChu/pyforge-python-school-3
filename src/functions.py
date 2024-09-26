@@ -1,6 +1,7 @@
 def reverse_string(s):
     return s[::-1]
 
+
 def is_prime(n):
     if n <= 1:
         return False
@@ -9,10 +10,12 @@ def is_prime(n):
             return False
     return True
 
+
 class User:
-  def __init__(self, username, email):
-    self.username = username
-    self.email = email
+    def __init__(self, username, email):
+        self.username = username
+        self.email = email
+
 
 def divide(x, y):
     if y == 0:

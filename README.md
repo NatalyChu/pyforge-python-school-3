@@ -1,3 +1,23 @@
+# EC2 Deployment Automation with GitHub Actions
+## This project involves the automated deployment of an application on an EC2 server using GitHub Actions. The main steps are:
+
+1. AWS IAM User Setup:
+
+- An IAM user is created with access to EC2 and S3.
+- Access keys are stored in GitHub Secrets.
+
+2. GitHub Actions Setup:
+
+- The workflow file is configured to automatically deploy on each push to the "hw-13-aws" branch.
+- The SSH client is first installed, then the code is uploaded to the EC2 server, and the necessary commands are executed to install dependencies and run the application.
+
+3. SSH Connection and Application Launch:
+
+The entire codebase is uploaded to the EC2 server using SCP.
+The application is launched in the background using nohup.
+
+---------------------------------------------------------------
+
 # Python Summer School 2024
 
 ## Substructure search

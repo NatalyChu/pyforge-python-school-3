@@ -28,7 +28,7 @@ def substructure_search(mols: list, mol: str) -> list:
         # Perform the substructure search
         if element.HasSubstructMatch(smile_mol):
             match_list.append(element)
-
+    
     # visualize(match_list)
 
     return match_list

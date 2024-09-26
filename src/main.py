@@ -2,9 +2,6 @@ from fastapi import FastAPI, status
 from fastapi.exceptions import HTTPException
 from rdkit import Chem
 
-# from models import User
-
-
 # [Optional] Upload file with molecules (the choice of format is yours).
 
 app = FastAPI()

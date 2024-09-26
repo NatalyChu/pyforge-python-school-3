@@ -103,3 +103,4 @@ def find_substructure(sub_str: str):
         raise HTTPException(
             status_code=422, detail="Provided string cannot be converted into molecule"
         )
+

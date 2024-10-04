@@ -1,0 +1,5 @@
+well_id,well_row,well_column,plate_id,property_name,property_value
+1,A,1,10,concentration,0.5
+2,A,2,10,concentration,0.7
+3,B,1,10,channel,red
+4,B,2,10,type,sample

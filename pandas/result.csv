@@ -1,0 +1,9 @@
+well_id,well_row,well_column,plate_id,concentration,type,experiment_id,concentration_unit,channel_order,temperature,channel
+1,A,1,10,0.5,,100,mg/ml,2,37,green
+1,A,1,10,0.5,,100,mg/ml,2,37,green
+2,A,2,10,0.7,,100,mg/ml,2,37,green
+2,A,2,10,0.7,,100,mg/ml,2,37,green
+3,B,1,10,,,100,mg/ml,2,37,red
+3,B,1,10,,,100,mg/ml,2,37,red
+4,B,2,10,,sample,100,mg/ml,2,37,green
+4,B,2,10,,sample,100,mg/ml,2,37,green

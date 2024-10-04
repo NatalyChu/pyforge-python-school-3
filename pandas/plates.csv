@@ -1,0 +1,3 @@
+plate_id,experiment_id,property_name,property_value
+10,100,concentration_unit,mg/ml
+10,100,channel,green

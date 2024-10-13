@@ -2,3 +2,6 @@
 src/__pycache__/*
 venv/*
 aws_config.json
+airflow/logs/*
+*/config/*
+airflow/postgres_data/*
